@@ -112,7 +112,7 @@ class CC01_Naming {
 	}
 	
 	// 7- Variable with unclear context (BAD EXEMPLE)
-	private void printGuessStatistics(char candidate, int count){
+	private String printGuessStatistics(char candidate, int count){
 		String number;
 		String verb;
 		String plurialModifier;
@@ -145,7 +145,41 @@ class CC01_Naming {
 		private String verb;
 		private String plurialModifier;
 		
-		public void make(char candidate, int count){}
+		public String make(char candidate, int count){
+			createPluralDependentMessageParts(count);
+			
+			return String.format(
+				"There %s %s %s%s", verb, number, candidate, plurialModifier);
+		}
+		
+		public void createPluralDependentMessageParts(int count){
+			
+			if(count == 0){
+				thereAreNotLetters();
+			}else if(count == 1){
+				thereIsOneLetters();
+			}else {
+				thereAreManyLetters(count);
+			}
+		}
+		
+		public void thereAreNotLetters(){
+			number = "no";
+			verb = "are";
+			plurialModifier = "s";
+		}
+		
+		public void thereIsOneLetters(){
+			number = "1";
+			verb = "is";
+			plurialModifier = "";
+		}
+		
+		public void thereAreManyLetters(int count){
+			number = Integer.toString(count);
+			verb = "are";
+			plurialModifier = "s";
+		}
 	}
 	
 }

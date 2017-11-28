@@ -111,4 +111,41 @@ class CC01_Naming {
 		}
 	}
 	
+	// 7- Variable with unclear context (BAD EXEMPLE)
+	private void printGuessStatistics(char candidate, int count){
+		String number;
+		String verb;
+		String plurialModifier;
+		
+		if(count == 0){
+			number = "no";
+			verb = "are";
+			plurialModifier = "s";
+		}else if(count == 1){
+			number = "1";
+			verb = "is";
+			plurialModifier = "";
+		}else {
+			number = Integer.toString(count);
+			verb = "are";
+			plurialModifier = "s";
+		}
+		
+		String gessMessage = String.format(
+			"There %s %s %s%s", verb, number, candidate, plurialModifier);
+		return gessMessage;
+	}
+	
+	// 7- Contextualized variable (One Solution for preceding example)
+		// Main problem is that the function is long, so by creating GessStatisticMessage 
+		//=> give clear context to the variables + Clarity of algorithm by breaking down into smalller functions  
+	class GessStatisticMessage {
+		// Above method variables have now clear context 
+		private String number;
+		private String verb;
+		private String plurialModifier;
+		
+		public void make(char candidate, int count){}
+	}
+	
 }

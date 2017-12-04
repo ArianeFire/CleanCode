@@ -13,7 +13,7 @@ Clean Code Serie : Function
 	(if that new function name is not restatement of the first one ==> your function where doing "more than one thing").
 	
 	-- Becareful of Sections within "Function"
-		If your function divided into 3 sections like "declaration, initial, execution..", this clearly mean that your function is doing "more than one thing".
+		If your function divided into sections like "declaration, initial, execution..", this clearly mean that your function is doing "more than one thing".
 		Corolaire : Function doing one thing can't reasonably be divided into section.
 		
 	-- One Level Of Abstraction Per Function
@@ -92,11 +92,160 @@ Clean Code Serie : Function
 	Don't forget that a '"long descriptive name" is better than a "short enigmatic name".
 	"Be Consistent with your Names" : for example if you use "getAll" in some module, don't' use for example 'findAll, fetchAll' in other module; you have to be consistent and stay with your first Name.
 	
-5- Function Arguments :
+5- Function Arguments : Niladic, Monadic, Dyadic, Triadic & Polyadic (More than 3 args)
+	First of all, the ideal number of args for a function is niladic (Zero arguments) & "Tryadic should be avoided where possible".
+	Arguments are harder for the testing point of view : cause you should make sure that every combinations work properly. 
+		*** (So, testing is "TRIVIAL" with "NO ARGS", with "ONE ARGS" not too hard & from 2 Args, it will become very hard not to mention more than 2 Args) ***
 	
+	*** "Common Monadic Form" : we have monadic for two reason, asking question about that args (Ex. : boolean fileExists("file.txt"))
+								or we will transform the args into another thing and return it, (Ex. : InputStream openFile("file.txt") transform the file name into an InputStream Object).
+			NB : Monadic should be avoided if not follow one of those purpose 
+				Output args should never be used for transformation (Instead the return the transformation as return value) 
+					=> "StringBuffer transform(StringBuffer in)" is better than "void transform(StringBuffer out)"
+					
+	*** "Flag arguments" passing boolean as arguments.
+		First it is a terrible idea to do such thing & it is clear the function will do more than "one thing" (one thing when the flag is true & another the flag is false).
+		Ex. : "render(boolean isSuiteTest)" should be divided into two function like "renderForSuite()" & "renderForSingleTest()".
 		
+	*** "Dyadic function" : A way to "monadic"
+		Difficult to understand than "Monadic" (writeField(name) vs writeField(output-stream, name))
+		But there are time where two args are good idea (Point p = new Point(0, 0) is much better than Point p = new Point(0)) 
+		Here, the args are "ordered components of single value (Point)" but for the writeField(output-stream, name) => there no such order between args.
+		An example of problematic "dyadic" is "assertEquals(expected, actual)" think about how many time you've put expeted at the place of actual (the ordering here need lot of practice)
 		
+		NB : Having say this "dyadic" are not so evils but you may think of a way to convert them into "monadic",
+			Ex. : In case of the "writeField(output-stream, name)", we could have those solutions :
+				1- Make "writeField" a member of "output-stream" so we can have something like : "output-stream.writeField(name)"
+				2- Make "output-stream" member of the class calling "writeField" so that we don't have to pass it.
+				3- Or create new class "FieldWriter" which will take in constructor "output-stream"
+				
+	*** "Triads"
+		More difficult to understand than "dyads", the issue of "ordering, pausing & ignoring" are doubled, "so think twice before creating them".
+		Example of non reasonable "triads" is "assertEquals(message, expected, actual)" (Think of how many time you have read the "message")
+		Example of reasonable "triads" is "assertEquals(actual, expected, delta)" (This is good because equality of floating point is relative).
+		
+	*** "Arguments Object"
+		When function need to have more than Two or Three args => consider wrapping args into an Object of there own.
+		Consider the difference between these two :
+			Circle makeCircle(double x, double y, double radius) => K.O
+			Circle makeCircle(Point center, double radius) => O.K
+	
+	*** "Verbs and Keywords"
+		For a monad, the (function name + arg) should form "verb/noun" pair. (Ex. : writeField(name) => verb form function name).
+		"Keyword form" of function name => encode the args in function name. (Ex. : "assertEquals(expected, actual)" may be better as "assertExpectedEqualsActual(expected, actual)" 
+																					in this case we don't worry about args ordering).
+		
+	*** "Have No Side Effects" (those are lies cause the function is supposed to "do one thing" but it does "another hidden thing")
+		Side Effects can be :
+			- Unexpected changes on variable of the function's own class
+			- Unexpected changes to the variable passed to the function (or System Globally)
 			
+			Example : This function is supposed to match "userName" to "password" and return true if it's OK (But it has side Effect)
+				public class UserValidator {
+					private Cryptographer cryptographer;
+					
+					public boolean checkPassword(String userName, String password) {
+						User user = UserGateway.findByName(userName);
+						if (user != User.NULL) {
+						String codedPhrase = user.getPhraseEncodedByPassword();
+						String phrase = cryptographer.decrypt(codedPhrase, password);
+						if ("Valid Password".equals(phrase)) {
+							Session.initialize();
+							return true;
+						}
+					}
+						return false;
+					}
+				}
+			*** Session.initialize(); : it reinitialize the session even if the session is already initialized. 
+				(the name of the function clearly says that it will check the password, but it says nothing about session initialization)
+				This may also cause another problem which is "temporal coupling", this mean the function may be called only in certain place (Where session can be safely intialize).
+				NB : renaming the function to "checkPasswordAndIntializeSession" may be OK but break the "do one thing" rules.
+				
+	*** "Output Arguments"
+		Note that arguments are "naturally" interpreted as "inputs", so using it as Output to may be confusing.
+		We talk about "double-take" when at one look at something you don't get it and you look at it again.
+		So having a function with "Output Arguments" may cause a "double-take".
+		Corolaire : "Everything function signature which may cause a double-take have to avoided".
+			Ex. : appendFooter(s);
+				1- Does this function add footer to the "s" ?
+				2- Or does it add "s" to the footer ?
+				
+				==> with the signature "public void appendFooter(StringBuffer report)", this become more clear.
+				==> This need clearly a "double-take", so it will be better to have something like "report.appendFooter()"
+		NB : **** In general "output arguments" should be avoided. If your function must change the state of something, have it change the state of its owning object.
+					
+5- "Command Query Separation"
+	Function should either do something or answer something but not both.
+	Example : "boolean set(String attribute, String value)" 
+		This function set the named attribute "attribute" to the value and if it ok return true else false.
+		In a reader point of view the call 'if(set("user", "seydou"))' is checking whether the username as already be set to "seydou".
+		
+		"A solution" to this problem may be to rename the function to "setAndCheckIfExist", but this doesn't help much.
+		"A Great Solution" may be to seperate the command from the query, by doing so will have something like :
+			if (attributeExists("username")) { 			//Query
+				setAttribute("username", "unclebob");   // Command
+				...
+			}
+			
+6- "Prefer Exception to ERROR CODES"
+		So having something like : "if (deletePage(page) == E_OK)" (deletePage(..) function return CODE) may lead to "nested structure" => the caller immediately deal with the CODE.
+		If we use Exception instead of CODE => we can seperate the processing code from the exeption handling
+			So we could have something like : 
+			try {
+				deletePage(page);
+			}catch(Exception e){
+				logger.log(e.getMessage());
+			}
+		
+	*** "Extract Try/Catch Block"
+		Knowing that "try/catch" are ugly so they may also mixed function processing with error handling.
+		So consider extracting try/catch blocks code inside functions of their own.  
+ 		
+		So this :
+			try {
+				deletePage(page);
+			}catch(Exception e){
+				logger.log(e.getMessage());
+			}
+		May become :
+			try {
+				deletePage(page);
+			}catch(Exception e){
+				logError(e); // Where : public void logError(Exception e){}
+			}
+			
+		NB : Error Handling is One Thing : When function hanlde error with try/catch => try may be the first statement of that function and they may be nothing else after the catch/finally blocks.
+
+	*** "Error.java Dependency Magnet"
+		classes like the following :
+			public enum Error {
+				OK, INVALID, NO_SUCH, LOCKED, OUT_OF_RESOURCES, WAITING
+			}
+		are called "dependency magnet cause all classes may import them" and use for Error Handling, this mean everytime this class change all classes using it may also change.
+		
+		Or by using Exception, new Exceptions can derive from previous one.
+		
+7- "Don't Repeat Yourself" (DRY Principle)
+	Duplicate is a problem, duplicate code must be centralized in function. Duplication is know as evil of all software.
+	Lot of new principles attempts to eliminate duplications from our code (POO, COP, ...).
+	So you should avoid duplications in the code.
+	
+8- "Structured Programming"
+	Known as  Edsger Djikstra''s Rules ** Every function should have one Entry & Exit Point ** (This mean that a function should have one return statement) 
+	=> No (break, continue) in for loop & no goto in a function.
+	This rules only make sense in large functions. for small function this rule doesn't have it place.
+	
+9- "So How to write function like this ?"
+	The key is to rewrite your code, the first code may be disorganized & break lot of those specified rules 
+	=> Don''t be afraid of rewriting it is key to "Good & Quality Code".
+	=> No One could ever get it right at One Shot (In my opinion it's only hard but may be acquire with experience).
+	
+10 - Conclusion
+	Every System is built from a Domain Specific Language where the "verbs are function names & Nouns classes".
+	"The art of programming is", and has always been, the art of language design.
+	By following the rules evoked in this chapter, "your functions will be short, well named, and nicely organized"
+	
 
 	
 	

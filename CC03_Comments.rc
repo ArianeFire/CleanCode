@@ -1,0 +1,391 @@
+Clean Code Serie : Comments
+	
+0- "INTRO" : "Dont Comments Bad Code Rewrite It" (B. Kernighan) 
+		"The proper use of comments is to compensate our failure to express ourself in code" 
+		(Yes comments are failure, so think of it if there isn't another way before writting them)
+		"If programming language were more expressive or if we can make it express our intent, we wouldn't need comments"
+		
+		Comments can be treated as lies cause "the older it is, the father away it is from the code it describe" (It's difficult for Programmers to maintain them).
+		"Inaccurate comments are far worse than no comments at all" (So if you write comments make sure it is clear).
+		
+1- "Comments Do Not Make Up For Bad Code" ==> Rather than spending your time to write comments for bad code, spend it to clean your mess.
+
+2- "Explain Yourself In Code" 
+	=> There are certain times where code is not so explanative, as programmer, we have to find a way to express ourself through code.
+	=> Example :
+		// Check to see if the employee is eligible for full benefits
+		if ((employee.flags & HOURLY_FLAG) && (employee.age > 65))
+		
+		is not expressive, we may have something like :
+		
+		if (employee.isEligibleForFullBenefits())
+		
+3- "Good Comments" => Keep in mind that the good comment is the one you dont write but express through your code.
+
+4- "Informative Comments" 
+	=> Going from this example :
+		// Returns an instance of the Responder being tested.
+		protected abstract Responder responderInstance();
+	
+		Here the comments is informative (it inform about the return instance), 
+		but this could be more clear by using a more "expressive" name like "responderBeingTested(...)"
+	
+	=> Another Example is the following : 
+		// format matched kk:mm:ss EEE, MMM dd, yyyy
+		Pattern timeMatcher = Pattern.compile("\\d*:\\d*:\\d* \\w*, \\w* \\d*, \\d*");
+		
+		In this case too, the comments is informative (Explain that the RegExp is intended to match date + time),
+		but it would be better to have this code placed in it own class (to convert Date/Time), then the comment would be superflous.
+
+5- "To Do Comments" 		
+	=> "Those comments are jobs that should be done" but for some reason can't be done for the moment.
+	=> It might be a reminder to :
+		1. Delete some deprecated feature
+		2. It might be a request for someone else to think of a better name for a function,...
+		
+		NB : "To Do" comments are not excuses to leave bad code in the system.
+		
+6- "Amplification" 
+	=> Comments may be used to applify the importance of something which may seems inconsequential.
+	=> Example :
+		String listItemContent = match.group(3).trim();
+		// the trim is real important. It removes the starting
+		// spaces that could cause the item to be recognized
+		// as another list.
+		new ListItemWidget(this, listItemContent, this.level + 1);
+	
+7- "Javadocs in public APIs" this is certainly the best use case for comments (Public API may be commented else there're not going to be usable)
+
+8-  "Bad Comments" **** Most of the comments fall into that category ****
+	
+	* "Mumbling" => writting comments because the process require it or cause you want to is a hack.
+				 => So when you have to write comments, make sure it is the best it could be.
+				 => Example of Mumbling 
+				 
+					public void loadProperties(){
+						try {
+							String propertiesPath = propertiesLocation + "/" + PROPERTIES_FILE;
+							FileInputStream propertiesStream = new FileInputStream(propertiesPath);
+							loadedProperties.load(propertiesStream);
+						}catch(IOException e){
+							// No properties files means all defaults are loaded
+						}
+					}
+				=> In this example, the comments has been written just because the process require it (It is a total mess).
+				=> If your comments need to read another module to understand it => it is a total mess.
+				
+	* "Redundant Comments" 
+		=> Looking to that example :
+			// Utility method that returns when this.closed is true. Throws an exception
+			// if the timeout is reached.
+			public synchronized void waitForClose(final long timeoutMillis) throws Exception {
+				if(!closed){
+					wait(timeoutMillis);
+					if(!closed)
+						throw new Exception("MockResponseSender could not be closed");
+				}
+			}
+		
+		=> This code is so simple that the comment make it hard to understand (It is less precise than the code).
+		
+		=> Another useless comments may be following from Tomcat source Code
+			public abstract class ContainerBase implements Container, Lifecycle, Pipeline, MBeanRegistration, Serializable {
+				/**
+				* The processor delay for this component.
+				*/
+				protected int backgroundProcessorDelay = -1;
+				/**
+				* The lifecycle event support for this component.
+				*/
+				protected LifecycleSupport lifecycle = new LifecycleSupport(this);
+			}
+			
+			**** This comment has no documentary purpose, so it shouldn't be there (When you write comments make sure it has documentary purpose).
+			
+	* "Mandated Comments" => Those kind of comments come when there rules like "every function/attribute must have comment" in a project.
+						  => In reality, those comments obfuscate the code & create lies & misdirection.
+		=> Example 
+			/**
+			*
+			* @param title The title of the CD
+			* @param author The author of the CD
+			* @param tracks The number of tracks on the CD
+			* @param durationInMinutes The duration of the CD in minutes
+			*/
+			public void addCD(String title, String author,
+				int tracks, int durationInMinutes) {
+				CD cd = new CD();
+				cd.title = title;
+				cd.author = author;
+				cd.tracks = tracks;
+				cd.duration = duration;
+				cdList.add(cd);
+			}
+	
+	* "Noise Comments" => Those comments provide no new information only obfuscate the code.
+		==> Examples : 
+			/**
+			* Default constructor.
+			*/
+			protected AnnualDateRule() {}
+			______________________________________________________________________________
+			/** The day of the month. */
+			private int dayOfMonth;
+			
+			/**
+			* Returns the day of the month.
+			*
+			* @return the day of the month.
+			*/
+			public int getDayOfMonth() { return dayOfMonth; }
+			
+			NB : This one is freaking terrible, "So replace the temptation to create noise by cleaning your code"
+			
+	* "Don't Use Comments When You Can Use Function/Variable"
+		=> Example : This one 
+		
+			// does the module from the global list <mod> depend on the
+			// subsystem we are part of?
+			if (smodule.getDependSubsystems().contains(subSysMod.getSubSystem()))
+			
+			can be refactored by the following (No need for comments here cause the code is clear) : 
+			
+			ArrayList moduleDependees = smodule.getDependSubsystems();
+			String ourSubSystem = subSysMod.getSubSystem();
+			if (moduleDependees.contains(ourSubSystem))
+	
+	* "Position Markers"
+		=> An Example of position marker is : "// Actions //////////////////////////////////"
+		=> It is used by programmers to mark a certain code in the source file.
+		=> This is not a very bad idea if we don't have lot of them (Mostly the multiple slashes should be eliminated)
+		=> So this may be "used when the benefit is significant" (otherwise if overused, it will be ignored & will create noise)
+		
+	* "Closing Brace Comments"
+		=> Example :
+			try {
+				while ((line = in.readLine()) != null) {
+					lineCount++;
+					charCount += line.length();
+					String words[] = line.split("\\W");
+					wordCount += words.length;
+				} //while
+				
+				System.out.println("wordCount = " + wordCount);
+				System.out.println("lineCount = " + lineCount);
+				System.out.println("charCount = " + charCount);
+			} // try
+			catch (IOException e) {
+				System.err.println("Error:" + e.getMessage());
+			} //catch
+		
+		=> Those kinds of comments come only in long function (not doing one thing), so when you have them, "think of shorten your function".
+			
+	* "Commented-Out Code"
+		=> This is one of those odious bad practices to avoid => "Never do this".
+			InputStreamResponse response = new InputStreamResponse();
+			response.setBody(formatter.getResultStream(), formatter.getByteCount());
+			// InputStream resultsStream = formatter.getResultStream();
+			// StreamReader reader = new StreamReader(resultsStream);
+			// response.setContent(reader.read(formatter.getByteCount()));
+			
+		=> Other programmers wouldn't have the gut to delete them (they will think that it is there for a very important reason)
+		
+		NB : Source Control System handle very code version, "so please never ever let those dead code, delete them".
+
+	* "HTML Comments" (Comments contenning HTML tags)
+		=> Those comments are bull shit, tags has no place in code 
+		=> (It must be the responsability of doc generator handle the formatting of comments).
+		=> "So never do this"
+		
+	* "Nonlocal Information"
+		=> When write comments, make sure it describe the code near it, 
+			it should never ever provide systemwide information in local context (The function/variable you comment is local context).
+		=> Example :
+			/**
+			* Port on which fitnesse would run. Defaults to <b>8082</b>.
+			*
+			* @param fitnessePort
+			*/
+			public void setFitnessePort(int fitnessePort){ this.fitnessePort = fitnessePort;}
+			
+			=> Here the comments also provide information about the default port (This what we call providing systemwide information in local context)
+			   Here the function as no clue of the default port => The comments about the default port should be deleted form there.
+	
+	* "To much Information"
+		=> Never put intersting historical discussion or irrevant description of details in your code.
+			 
+	* "Inobvious Connection"
+		=> First, the connection between the comments & the code it describe should be obvious.
+		=> Example of Inobvious connection : 
+			/*
+			* start with an array that is big enough to hold all the pixels
+			* (plus filter bytes), and an extra 200 bytes for header info
+			*/
+			this.pngBytes = new byte[((this.width + 1) * this.height * 3) + 200];
+			
+			Questions here :  What is plus filter ? is it related to the "+1" ? why 200 byte ?
+			
+			=> *** A comment's purpose is to explain code that doesn't explain itself,
+			=> So it is pitty to comment that need explanation.
+			
+9- Cleaned Code Example By removing non needed comments : ()
+	/**
+	* This class Generates prime numbers up to a user specified
+	* maximum. The algorithm used is the Sieve of Eratosthenes.
+	* <p>
+	* Eratosthenes of Cyrene, b. c. 276 BC, Cyrene, Libya --
+	* d. c. 194, Alexandria. The first man to calculate the
+	* circumference of the Earth. Also known for working on
+	* calendars with leap years and ran the library at Alexandria.
+	* <p>
+	* The algorithm is quite simple. Given an array of integers
+	* starting at 2. Cross out all multiples of 2. Find the next
+	* uncrossed integer, and cross out all of its multiples.
+	* Repeat untilyou have passed the square root of the maximum
+	* value.
+	*
+	* @author Alphonse
+	* @version 13 Feb 2002 atp
+	*/
+	import java.util.*;
+	public class GeneratePrimes
+	{
+		/**
+		* @param maxValue is the generation limit.
+		*/
+		public static int[] generatePrimes(int maxValue)
+		{
+			if (maxValue >= 2) // the only valid case
+			{
+				// declarations
+				int s = maxValue + 1; // size of array
+				boolean[] f = new boolean[s];
+				int i;
+				for (i = 0; i < s; i++)
+					f[i] = true;
+				// get rid of known non-primes
+				f[0] = f[1] = false;
+				// sieve
+				int j;
+				for (i = 2; i < Math.sqrt(s) + 1; i++)
+				{
+					if (f[i]) // if i is uncrossed, cross its multiples.
+					{
+						for (j = 2 * i; j < s; j += i)
+							f[j] = false; // multiple is not prime
+					}
+				}
+				// how many primes are there?
+				int count = 0;
+				for (i = 0; i < s; i++)
+				{
+					if (f[i])
+						count++; // bump count.
+				}
+				int[] primes = new int[count];
+				// move the primes into the result
+				for (i = 0, j = 0; i < s; i++)
+				{
+					if (f[i]) // if prime
+						primes[j++] = i;
+				}
+				return primes; // return the primes
+			}
+			else // maxValue < 2
+				return new int[0]; // return null array if bad input.
+		}
+	}	
+	
+	
+	**** CAN BE REFACTORED TO : ****
+	
+	/**
+	* This class Generates prime numbers up to a user specified
+	* maximum. The algorithm used is the Sieve of Eratosthenes.
+	* Given an array of integers starting at 2:
+	* Find the first uncrossed integer, and cross out all its
+	* multiples. Repeat until there are no more multiples
+	* in the array.
+	*/
+	public class PrimeGenerator
+	{
+		private static boolean[] crossedOut;
+		private static int[] result;
+		
+		public static int[] generatePrimes(int maxValue)
+		{
+			if (maxValue < 2)
+				return new int[0];
+			else
+			{
+				uncrossIntegersUpTo(maxValue);
+				crossOutMultiples();
+				putUncrossedIntegersIntoResult();
+				return result;
+			}
+		}
+		
+		private static void uncrossIntegersUpTo(int maxValue)
+		{
+			crossedOut = new boolean[maxValue + 1];
+			for (int i = 2; i < crossedOut.length; i++)
+				crossedOut[i] = false;
+		}
+		
+		private static void crossOutMultiples()
+		{
+			int limit = determineIterationLimit();
+			for (int i = 2; i <= limit; i++)
+				if (notCrossed(i))
+					crossOutMultiplesOf(i);
+		}
+
+		private static int determineIterationLimit()
+		{
+			// Every multiple in the array has a prime factor that
+			// is less than or equal to the root of the array size,
+			// so we don't have to cross out multiples of numbers
+			// larger than that root.
+			double iterationLimit = Math.sqrt(crossedOut.length);
+			return (int) iterationLimit;
+		}
+		
+		private static void crossOutMultiplesOf(int i)
+		{
+			for (int multiple = 2*i; multiple < crossedOut.length; multiple += i)
+				crossedOut[multiple] = true;
+		}
+		
+		private static boolean notCrossed(int i)
+		{
+			return crossedOut[i] == false;
+		}
+		
+		private static void putUncrossedIntegersIntoResult()
+		{
+			result = new int[numberOfUncrossedIntegers()];
+			for (int j = 0, i = 2; i < crossedOut.length; i++)
+				if (notCrossed(i))
+					result[j++] = i;
+		}
+		
+		private static int numberOfUncrossedIntegers()
+		{
+			int count = 0;
+			for (int i = 2; i < crossedOut.length; i++)
+			if (notCrossed(i))
+				count++;
+			return count;
+		}
+	}
+	
+	
+	
+		
+
+		
+
+		
+	
+	
+		

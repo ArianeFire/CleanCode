@@ -1,0 +1,177 @@
+Clean Code Serie : Formatting
+ 
+0- "INTRO"
+
+	*** "Formatting is about Communication & Communication is Professional Developper's first order of business"
+	
+	=> As professionnal Developper, you should make sure that your code is well formatted,
+	=> Pick simple rules for your code format & follow them consistenly.
+	
+	=> Keep that in mind, the functionalities you write today have a good chance to change in the next release,
+		But the readability of your code will have effect on all the changes that will ever be made.
+		
+	*** So code "style & readability" will affect the "maintainability & extensibility".
+		
+1- "Vertical Formatting"
+	=> Just like "news paper article", source files shoud :
+		1. have a simple name but explanatory (It should tell us whether we are in the right module or not).
+		2. have a topmost part explaining the highlevel concepts & alogrithms.
+		3. Detail should show up as we move downward.
+		4. Just like "new Paper" where there are set of small section which make it usable, 
+			"Source file should be like that => contains small functions".
+			
+2- "Vertical Openness Between Concepts"
+	=> All code are nearly read from "right to left & top to bottom".
+		* Each Line is an expression or clause
+		* A set of line may represent a thought
+		* And those thoughts should be separated by blank lines.
+		
+	=> In one word, Vertical Opennes separate concepts.
+		
+3- "Vertical Density"
+	It implies close association : So lines of codes that are tightly related, should appear vertically dense.
+	
+4- "Vertical Distance"
+	Concepts that are closely related should be kept vertically close to each other.
+	This implies that closely related concepts shouldn't be in seperated files (This is why protected variables should be ignored).
+	=> So when you place your concepts (functions), make sure they are easily understandable by the reader.
+	
+	=> "Variable declaration" should be declared as close as possible to their usage. 
+		(For Ex.:  For functions, they should at the top cause function are small & they will be used inside the function).
+		
+	=> "Controls Variable for loops" should be declared within the loop statement. 
+		Ex. (look at the "Test each") : for (Test each : tests)
+				count += each.countTestCases();
+
+	=> "Dependent Function" : If a function call another, they should be vertically close (caller above calle).
+	
+5- "Vertical Ordering"
+	=> Most important concepts should come first then the level detail should appear as we go down the source file.
+	
+5- "Horizontal Formatting" (How long a line should be ?)
+	=> As Response :
+		1. You should never need to scroll to the right in order to see a line.
+		2. Or you may keep at most 120 characters/line.
+
+6- "Horizontal Openness & Density"
+	=> Things that are "weakly related horizontally" should be separated with "white space"
+	=> Ex. : Notice the whitte space at both side of the "=" sign :
+		int lineSize = line.length();
+	=> The "=" sign is composed of two side (left & right) & here the white space seperate the two side. 
+	=> In other hand, we should never have "white space" between function & open paranthesis : cause function highly related to it args.
+	
+7- "Indentation"
+	=> The content of source file is a total hierachy from the class name, to instance variable, 
+		to methods content blocks, to blocks inside method content & recursively to block inside those blocks.
+		
+	=> "So to make those hierarchy visible, we should INDENT our code".
+	
+	=> "Breaking Indentation" : 
+		Sometimes, we may be tempted to break indentations (like in small if/while/for statement & even small function)
+		Ex.: 
+			public class CommentWidget extends TextWidget
+			{
+				public static final String REGEXP = "^#[^\r\n]*(?:(?:\r\n)|\n|\r)?";
+				public CommentWidget(ParentWidget parent, String text){super(parent, text);}
+				public String render() throws Exception {return ""; }
+			}
+		
+		NB : "Never ever do this kind of breaking", it is not communicative & hard to read (don't forget that we are professionnal). 
+				
+9- "Example of Well formatted Code":
+	
+	public class CodeAnalyzer implements JavaFileAnalysis {
+		private int lineCount;
+		private int maxLineWidth;
+		private int widestLineNumber;
+		private LineWidthHistogram lineWidthHistogram;
+		private int totalChars;
+		
+		public CodeAnalyzer() {
+			lineWidthHistogram = new LineWidthHistogram();
+		}
+		
+		public static List<File> findJavaFiles(File parentDirectory) {
+			List<File> files = new ArrayList<File>();
+			findJavaFiles(parentDirectory, files);
+			return files;
+		}
+		
+		private static void findJavaFiles(File parentDirectory, List<File> files) {
+			for (File file : parentDirectory.listFiles()) {
+				if (file.getName().endsWith(".java"))
+					files.add(file);
+				else if (file.isDirectory())
+					findJavaFiles(file, files);
+			}
+		}
+		
+		public void analyzeFile(File javaFile) throws Exception {
+			BufferedReader br = new BufferedReader(new FileReader(javaFile));
+			String line;
+			while ((line = br.readLine()) != null)
+				measureLine(line);
+		}
+		
+		private void measureLine(String line) {
+			lineCount++;
+			int lineSize = line.length();
+			totalChars += lineSize;
+			lineWidthHistogram.addLine(lineSize, lineCount);
+			recordWidestLine(lineSize);
+		}
+		
+		private void recordWidestLine(int lineSize) {
+			if (lineSize > maxLineWidth) {
+				maxLineWidth = lineSize;
+				widestLineNumber = lineCount;
+			}
+		}
+		
+		public int getLineCount() {
+			return lineCount;
+		}
+		public int getMaxLineWidth() {
+			return maxLineWidth;
+		}
+		
+		public int getWidestLineNumber() {
+			return widestLineNumber;
+		}
+		
+		public LineWidthHistogram getLineWidthHistogram() {
+			return lineWidthHistogram;
+		}
+		
+		public double getMeanLineWidth() {
+			return (double)totalChars/lineCount;
+		}
+		
+		public int getMedianLineWidth() {
+			Integer[] sortedWidths = getSortedWidths();
+			int cumulativeLineCount = 0;
+			for (int width : sortedWidths) {
+				cumulativeLineCount += lineCountForWidth(width);
+				if (cumulativeLineCount > lineCount/2)
+					return width;
+			}
+			
+			throw new Error("Cannot get here");
+		}
+		
+		private int lineCountForWidth(int width) {
+			return lineWidthHistogram.getLinesforWidth(width).size();
+		}
+		
+		private Integer[] getSortedWidths() {
+			Set<Integer> widths = lineWidthHistogram.getWidths();
+			Integer[] sortedWidths = (widths.toArray(new Integer[0]));
+			Arrays.sort(sortedWidths);
+			return sortedWidths;
+		}
+	}
+	
+	
+		
+		
+	

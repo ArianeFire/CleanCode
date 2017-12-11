@@ -1,0 +1,256 @@
+Clean Code Serie : Error Handling
+
+0- "INTRO" 
+	Thing can go wrong in a software, so it is the job for us programmer to make sure our code work no matter what going wrong.
+	
+	*** "Error handling is important, but if it obscures logic, it’s wrong."
+	
+	The Goal of this chapter is to write code that :
+		=> is clean and robust—code 
+		=> handles errors with grace and style.
+		
+1- "Use Exception Rather than Error Code"
+	The first way that was existing for error handling is Error code, let look at an example of code using that :
+	
+		public class DeviceController {
+			...
+			public void sendShutDown() {
+				DeviceHandle handle = getHandle(DEV1);
+				// Check the state of the device
+				if (handle != DeviceHandle.INVALID) {
+					// Save the device status to the record field
+					retrieveDeviceRecord(handle);
+					// If not suspended, shut down
+					if (record.getStatus() != DEVICE_SUSPENDED) {
+						pauseDevice(handle);
+						clearDeviceWorkQueue(handle);
+						closeDevice(handle);
+					} else {
+						logger.log("Device suspended. Unable to shut down");
+					}
+				} else {
+				logger.log("Invalid handle for: " + DEV1.toString());
+				}
+			}
+			...
+		}
+	
+		** The problem is that :
+			1. The caller immediatly deal with the Error Code
+			2. This checking could be forgot by the caller
+			3. This make our calling code very messy and ugly (atmost the logic is directly obscured)
+		
+	=> Look at know how "exception" make thing more clear & cleanner :
+	
+		public class DeviceController {
+			...
+			public void sendShutDown() {
+				try {
+					tryToShutDown();
+				} catch (DeviceShutDownError e) {
+					logger.log(e);
+				}
+			}
+
+			private void tryToShutDown() throws DeviceShutDownError {
+				DeviceHandle handle = getHandle(DEV1);
+				DeviceRecord record = retrieveDeviceRecord(handle);
+				pauseDevice(handle);
+				clearDeviceWorkQueue(handle);
+				closeDevice(handle);
+			}
+			
+			private DeviceHandle getHandle(DeviceID id) {
+				...
+				throw new DeviceShutDownError("Invalid handle for: " + id.toString());
+				...
+			}
+			...
+		}
+		
+		** Look at how cleanner the code became & there is no obscure factor,
+		** Most importtantly the algorithm for shutdown & error handling have been separeted in different concerns.
+		** So it is better to use wherever possible instead of error code.
+
+2- "Write your Try-Catch-Finally statements first"
+		
+	The try/catch block define a scope in our code that says : 
+	At any point of the "try block", we can have an exception thrown and be handle in the "cathch block"
+	So whatever happen in the "try block" the catch block may let our program in a consistent state.
+	
+	Every time your function handle exception make sure the try statement is the first one in that function & the cathc the last one.
+		This would help the reader to know what to expect from this code/function.
+		
+	NB : "Whenever you write code that can throw an exception" (Read file content for Ex.)
+		1. Start by writting unit test that force the Exception which could be thrown.
+		2. Then follow the TDD procedure.
+		
+	
+3- "Use Unchecked Exception instead of checked"
+	
+	1. Checked Exception : Exception class is checked expection
+		Those kinds of exceptions force the user to handle it or add it to the method signature (else the code will not compile).
+		
+	2. Unckecked Exception : RuntimeException, IllegalArgumentException, NullPointerException, or IllegalStateException are unchecked one.
+		Those Exceptions don't force the user to handle or add them to the method signature.
+		
+	=> So using a "checked exception" in a module may lead to a big change :
+		Ex. :  
+			If we throw a checked exception in a low level stage of our module,  
+			Assumming that this module is used by a lot of code 
+				=> All those codes will have the checked exception in the method signature or hanlde it.
+			Then imagine there is change on that low level code that throw the checked exception (so that it throws new checked exception)
+				=> All the codes using it will be change or the signature of all method will be updated.
+			This is why checked exception may avoided 
+			(This is a great breaking of OCP "Open/Close Principle" => All classes using the module is open for modification
+				Or the OCP says that classes should be open to extension & close to modification).
+				
+				
+	NB : 
+		Checked exceptions can sometimes be useful if you are writing a critical library
+		In general application development the dependency costs outweigh the benefits.
+				
+				
+4- "Provide Context with Exception"
+	Create informative error messages and pass them along with your exceptions. 
+	Mention the operation that failed and the type of failure.
+	
+5- "Define Exception classes based on the caller's need"
+	When Defining Exception in our applicaton, the most concern is the "how the exception will be caught".
+	
+	=> Here is an example of poor exception classification for a third party lib., it handle multiple kind of exception that can thrown
+		
+		ACMEPort port = new ACMEPort(12);
+		try {
+			port.open();
+		} catch (DeviceResponseException e) {
+			reportPortError(e);
+			logger.log("Device response exception", e);
+		} catch (ATM1212UnlockedException e) {
+			reportPortError(e);
+			logger.log("Unlock exception", e);
+		} catch (GMXError e) {
+			reportPortError(e);
+			logger.log("Device response exception");
+		}...
+	
+		Here the user of the library doesn't need all those exception when using the lib.
+		In fact there is a lot of duplication here, we should not be suprised.
+		
+	Cause of the duplication of code regardless to the exception handling, 
+	we can wrap the API call inside a class so that we have a common Exception.
+	Here is the refactored code :
+		
+		LocalPort port = new LocalPort(12);
+		try {
+			port.open();
+		} catch (PortDeviceFailure e) {
+			reportError(e);
+			logger.log(e.getMessage(), e);
+		}...
+		
+		LocalPort is the class that wrap the API call :
+		
+		public class LocalPort {
+			private ACMEPort innerPort;
+			
+			public LocalPort(int portNumber) {
+				innerPort = new ACMEPort(portNumber);
+			}
+			
+			public void open() {
+				try {
+					innerPort.open();
+				} catch (DeviceResponseException e) {
+					throw new PortDeviceFailure(e);
+				} catch (ATM1212UnlockedException e) {
+					throw new PortDeviceFailure(e);
+				} catch (GMXError e) {
+					throw new PortDeviceFailure(e);
+				}..
+			}
+		}
+		
+	NB : Anyway it is "Best Practice" to wrap third-party API call (It minimize your dependency upon it, you can easily move upon another)
+	
+6- "Define Normal Flow"
+	This is a key to have more cleanner code by avoiding exception try/catch
+	Ex. : Look at this code where we could have "defined normal flow" to avoid exception
+		
+		try {
+			MealExpenses expenses = expenseReportDAO.getMeals(employee.getID());
+			m_total += expenses.getTotal();
+		} catch(MealExpensesNotFound e) {
+			m_total += getMealPerDiem();
+		}
+	
+		Here when "expenseReportDAO.getMeals(...)" does find a MealExpenses it throw an exception 
+		Or can simply return MealPerDiem implementation for this purpose 
+		So that we don't need to deal with the exception.
+		
+		Doing so we will have something like :
+		
+			MealExpenses expenses = expenseReportDAO.getMeals(employee.getID());
+			m_total += expenses.getTotal();
+			
+			1.
+				public class PerDiemMealExpenses implements MealExpenses {
+					public int getTotal() {
+					// return the per diem default
+					}
+				}
+			2.
+				Modify "ExpenseReportDAO" implementation so that it return PerDiemMealExpenses when no Expense found.
+				
+	==> This is called the "SPECIAL CASE PATTERN" (You create a class or configure an object so that it handles a special case for you)
+	
+7- "Don't Return Null"
+	=> Null is one of the top cause for Exception.
+	=> When we return null, we are essentially creating work for ourselves and foisting
+		problems upon our callers.
+		
+	SOLUTION : If you are tempted to return null from a method, 
+				consider "throwing an exception or returning a SPECIAL CASE object instead".
+				
+	Example where Special Case Object does the job :
+		List<Employee> employees = getEmployees();
+		if (employees != null) {
+			for(Employee e : employees) {
+				totalPay += e.getPay();
+			}
+		}
+		
+	Here an alternative is to return EMPTY Array if "getEmployees()" doesn't return any employees.
+		In this case we didn't have to check if getEmployees() null or not.
+		
+8- "Don't Pass Null"
+	Passing null to a function is the biggest evil, this should be avoided whenever possible.
+	Let's look at this example :
+		public class MetricsCalculator
+		{
+			public double xProjection(Point p1, Point p2) {
+				return (p2.x – p1.x) * 1.5;
+			}
+		}
+		
+		When p1 or p2 is null, we will have NullPointerException 		
+		
+		1. A solution to this may be to create new Exception "InvalidArgumentException" (Which is better than NullPointerException)
+		2. Another alternative is to use assertion expressions :
+			public class MetricsCalculator
+			{
+				public double xProjection(Point p1, Point p2) {
+					assert p1 != null : "p1 should not be null";
+					assert p2 != null : "p2 should not be null";
+					return (p2.x – p1.x) * 1.5;
+				}
+			}
+		
+		=> In general, there is no good way to deal with Null passed accidentally,
+		=> If possible, not allowing by default null Arguments is the best solution.
+		
+9- "Conclusion":
+	Clean code is readable, but it must also be robust.
+	We can write robust clean code if we see error handling as a separate concern, 
+	something that is viewable independently of our main logic.
+	

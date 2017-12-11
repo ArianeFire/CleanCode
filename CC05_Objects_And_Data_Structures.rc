@@ -1,0 +1,183 @@
+Clean Code Serie : Objects & Data Structures
+ 
+0- "INTRO"
+	Note : The reason why we keep our variables private is :
+		=> We don't want anyone to be dependent on them.
+		=> We want to be able to change/update their type/implementation freely.
+	
+		=> The question is why then so many programmers add (get/set)ter on their class to expose the object.
+
+1- "Data Abstraction"
+	=> Take a look at those two Point class implementations :
+		
+		// BAD
+		public class Point {
+			public double x;
+			public double y;
+		}
+		
+		// Greet
+		public interface Point {
+			double getX();
+			double getY();
+			void setCartesian(double x, double y);
+			double getR();
+			double getTheta();
+			void setPolar(double r, double theta);
+		}
+		
+		=> The second one is cool because :
+			1. we can't tell whether the implementation is Cartesien or Polar Cordinate
+			2. And we setup also an access policy with the methods. (More than a data structure)
+		
+		=> The first is KO cause :
+			1. It expose variables & it force us to use cartesian coordiante.
+			2. Even if we have made field private (add get/setter) => so we expose our attributes
+			3. Like this class Point must be manage independantly of over type of point.
+			
+		**** So Hidding information is about Abstraction ****
+		
+	
+	=> Ex. 2 : 
+		// KO : Concrete Vehicle
+		public interface Vehicle {
+			double getFuelTankCapacityInGallons();
+			double getGallonsOfGasoline();
+		}
+		
+		// OK : Abstract Vehicle
+		public interface Vehicle {
+			double getPercentFuelRemaining();
+		}
+		
+		** The First handle the fuel quantity by exposing the data structure (FuelTankCapacityInGallons, GallonsOfGasoline)
+		** For the second one, we have no clue of the DataStructure.
+		
+		NB : We have to think seriously about how we represent the data in a class. (The very bad solution is to use gettet/setter)
+		
+2- "Data/Objects Anti-Symmetry"
+	
+	** Objects **  "hide their data" behind an abstraction & "expose functions" that operate on that data.
+	** Data structure ** "expose their data" & have "no meaningful function".
+	
+	To make this definition more clear let look at the following Geometry differents implementations :
+	
+	=> "Procedural Implementation"
+	
+		public class Square { /* Contains only public fields */ }
+		public class Rectangle { /* Contains only public fields */  }
+		public class Circle { /* Contains only public fields */ }
+		
+		public class Geometry {
+			public double area(Object shape) throws NoSuchShapeException
+			{
+				if (shape instanceof Square) {
+					// Calculate Square area
+				}else if (shape instanceof Rectangle) {
+					// Calculate Rectangle area
+				}else if (shape instanceof Circle) {
+					// Calculate Circle area
+				}
+				throw new NoSuchShapeException();
+			}
+		}
+	
+	**** NB : 
+			1. When we add new "function" (Ex. : permiter calculation), the data structure will not change.
+			2. When we add new "data structure" (Ex. : Triangle), all the functions will change.
+				
+	=> "Oriented Object Implementation"
+	
+		public interface Shape {
+			double area();
+		}
+		
+		public class Square implements Shape {
+			/* Private Attributes */
+			public double area() { /* Area Implementation */ }
+		}
+		
+		public class Rectangle implements Shape {
+			/* Private Attributes */
+			public double area() { /* Area Implementation */	}
+		}
+		
+		public class Circle implements Shape {
+			/* Private Attributes */
+			public double area() { /* Area Implementation */ }
+		}
+		
+	**** NB :
+			1. Notice how easy it is to add new "Shape" ("Class"), none of the existing DataStructure will change.
+			2. But when we add new "function" (perimeter() to Shape interface), all the existing "Classes" may change.
+	
+	*** Remark : 
+		"Procedural code" (code using data structures) makes it easy to add new "functions" without changing the existing "data structures". 
+		"OO code", on the other hand, makes it easy to add new classes without changing existing functions. (This problem may be solve now in java 8 with default methods).
+		** So the thing is to choose based on your need : if you need to add more function => use "Procedural Code" & if you need to add more class/object => "OO Code".
+		
+3- "The Law of Demeter"
+	=> A Module should not know about the innards of objects it manipulate. (As we've seen Objects hide their data & expose operations).
+	=> More Details about this Law :
+		A method "f" of a class "C" should only call the "methods" of these :
+			1. "C"
+			2. An Object created by "f"
+			3. An Object passed as argument to "f"
+			4. An Object held as variable in "C"
+			
+			NB : Method should not invoke methods on Object that are returned by allowed functions (like : foo().bar()),
+				(Also known as : "Talk to Friends not to Strangers").
+				
+		Ex. of break Demeter's Law : final String outputDir = ctxt.getOptions().getScratchDir().getAbsolutePath();
+	
+	* "Train wrecks" => final String outputDir = ctxt.getOptions().getScratchDir().getAbsolutePath();
+		=> The code above is also know as "train wreck" cause it look like a bunch of train cars coupled.
+		It may be splited to something like :
+		
+			Options opts = ctxt.getOptions();
+			File scratchDir = opts.getScratchDir();
+			final String outputDir = scratchDir.getAbsolutePath();
+			
+		Here Context (ctx) knows a lot, so this will be breaking of Demeter's Law depending of if (Context, Options, File) classes are "Data Structure or Object"
+			1. If => "Data Structure", there is no breaking of Demeter here cause Data Structure expose their data. (Demeter those )
+			2. If => "Object", there is clearly a breaking of Demeter cause object hide their Data and provided Interface to operate.
+			
+4- "Hybrids"
+	=> "Train wreck" lead to what we call "hybrid", half "data structure" & half "object",
+		this kind of class content method that does significant thing & also expose their "data structure".
+		
+	=> Those hybrids make it hard add function & also data structure (Worse of the two world). "Avoid creating them"
+	
+5- "Hiding Structure"
+	=> Always with our above "Train wreck" : 
+		final String outputDir = ctxt.getOptions().getScratchDir().getAbsolutePath();
+		
+		Supposing that classes there are objects => Demeter is broke (Object are supossed to hide their internal structure => where not supposed to navigate through them).
+	
+	So in order to resolve this problem, we need to know the intent of the "Train wreck", to do so we report to the following code in the same module :
+		
+		String outFile = outputDir + "/" + className.replace('.', '/') + ".class";
+		FileOutputStream fout = new FileOutputStream(outFile);
+		BufferedOutputStream bos = new BufferedOutputStream(fout);
+		
+	Here file extension + slashes are mixed together which is not a good idea, 
+	but this code tell us that the intent of the "train wreck" is to create a scratch file (notice the use of the "outputDir")
+	
+	As the intent is to "create scratch file" & Context (ctx) is Object & is supposed to do something 
+		=> we must tell the "ctx" object to create scratch file : BufferedOutputStream bos = ctxt.createScratchFileStream(classFileName);
+		
+		=> This is far better, cause now the "Context ctx" object can hide it internals => The Low of Demeter is respected. 
+		
+6- "Conclusion"
+	"Objects expose behavior and hide data". 
+	This makes it easy to add new kinds of objects without changing existing behaviors. 
+	It also makes it hard to add new behaviors to existing objects. 
+	
+	"Data structures expose data and have no significant behavior".
+	This makes it easy to add new behaviors to existing data structures 
+	but makes it hard to add new data structures to existing functions.
+	
+		
+		
+	
+	

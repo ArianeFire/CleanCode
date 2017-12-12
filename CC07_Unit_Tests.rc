@@ -1,0 +1,150 @@
+Clean Code Serie : Unit Tests
+
+0- "INTRO" 
+	=> Computer Science as come a long way concerning testing, there were no real test back in the 90's
+	
+1- "Three Law of TDD"
+
+	=> "First Law" You may not write production code until you have written a failing unit test.
+	=> "Second Law" You may not write more of a unit test than is sufficient to fail, and not compiling is failing.
+	=> "Third Law" You may not write more production code than is sufficient to pass the currently failing test.
+	
+	=> In such way, the tests and the production code are written together, 
+	so we may finish with test that worth the production code itself => daunting management problem.
+	
+
+2- "Keeping Tests Clean"
+	=> Keep in mind that dirty tests is equivalent to, if not worse than, having no tests.
+		=> Cause the Code may changed as long production code evolves.
+		=> The dirtier your tests are, the thoughest it is change them,
+			This could lead to write new test for the new production code,
+			Then when we change production code, the existing code may start to fail.
+			
+	=> Test code is just as important as production code : 
+		1. If you don't want to passed bad time as production code change.
+		2. You don't want to miss your estimations.
+			Cause when Production code change, dirty tests must be more thougher to change.
+
+3- "Tests Enable the -ilities"
+	=> It is unit tests that keep our code flexible, maintainable, and reusable.
+		The reason is simple. If you have tests, you do not fear making changes to the code!
+		Without tests every change is a possible bug.
+		
+	=> So having an automated suite of unit tests that cover the production code is the key to
+		keeping your design and architecture as clean as possible. 
+		Tests enable all the -ilities, because tests enable change.
+		
+4- "Clean Tests" => Here, we answer to the question : What make a clean test ?
+	=> Readability is the key to a clean tests.
+		Readability => clarity, simplicity, and density of expression.
+		
+	=> In one words, clean test is the one which "BUILD-OPERATE-CHECK Pattern" obvious.
+	
+5- "Dual Standard"
+	=> See how this ugly abomination is transform to clean test
+		@Test
+		public void turnOnLoTempAlarmAtThreashold() throws Exception {
+			hw.setTemp(WAY_TOO_COLD);
+			controller.tic();
+			assertTrue(hw.heaterState());
+			assertTrue(hw.blowerState());
+			assertFalse(hw.coolerState());
+			assertFalse(hw.hiTempAlarm());
+			assertTrue(hw.loTempAlarm());
+		}
+	
+		NB : There is two abomination here : 
+			1. What the hell the "tic()" method  of controller does ?
+			2. There is a lot of assertion there (too difficult to know what is being tested).
+			
+		An refactoring may be the following :
+		
+			@Test
+			public void turnOnLoTempAlarmAtThreshold() throws Exception {
+				wayTooCold();
+				assertEquals("HBchL", hw.getState());
+			}
+			
+			public String getState() {
+				String state = "";
+				state += heater ? "H" : "h";
+				state += blower ? "B" : "b";
+				state += cooler ? "C" : "c";
+				state += hiTempAlarm ? "H" : "h";
+				state += loTempAlarm ? "L" : "l";
+				return state;
+			}
+			
+	We can notice the getState() method implementation is not perfect :
+		=> This is the "dual standard" : 
+			There are things that you might never do in a "production environment" that are perfectly fine in a "test environment"
+			
+6- "One Assert per Test"
+	=> A Draconian Rules : Every test function in a JUnit test should have one and only one assert statement
+	
+	=> In reality, there is no problem with putting more than one assertion in test function 
+		(But make sure it understandable/readable)
+		
+	=> The One Assert Per Class Rule may lead to this kind of duplication :
+		public void testGetPageHierarchyAsXml() throws Exception {
+			givenPages("PageOne", "PageOne.ChildOne", "PageTwo");
+			whenRequestIsIssued("root", "type:pages");
+			
+			thenResponseShouldBeXML();
+		}
+		
+		public void testGetPageHierarchyHasRightTags() throws Exception {
+			givenPages("PageOne", "PageOne.ChildOne", "PageTwo");
+			whenRequestIsIssued("root", "type:pages");
+			
+			thenResponseShouldContain("<name>PageOne</name>", "<name>PageTwo</name>", "<name>ChildOne</name>");
+		}
+		
+		Notice the duplication on the first two lines of code of the functions. 
+			**(Something very interesting here is the "giving-when-then" convention here).
+		
+		NB : The duplication here can be avoided using the "Template Method Pattern" by :
+			1. The "given-when" part in an abstract class (cause they are common to the functions).
+			2. And the "then" part in the derivate classes.
+			
+			Another solution may be to put "given-when" part in "@Before" & the "then" part in "@Test" functions.
+			
+7- "Single Concept per Test"
+	A better rule is to test a single concept in each test function (Remember we don't want to have long functions).
+	
+	=> Example : Here, this function is testing more than one concept  (Actually 2)
+		public void testAddMonths() {
+			SerialDate d1 = SerialDate.createInstance(31, 5, 2004);
+			
+			SerialDate d2 = SerialDate.addMonths(1, d1);
+			assertEquals(30, d2.getDayOfMonth());
+			assertEquals(6, d2.getMonth());
+			assertEquals(2004, d2.getYYYY());
+			
+			SerialDate d3 = SerialDate.addMonths(2, d1);
+			assertEquals(31, d3.getDayOfMonth());
+			assertEquals(7, d3.getMonth());
+			assertEquals(2004, d3.getYYYY());
+		}
+		
+		The problem here is not the number of "assert" but the two different concepts been tested
+		
+		* Solution : minimize the number of asserts per concept and test just one concept per test function.
+	
+8- "F.I.R.S.T principle in Testing" 
+	=> Testing should respect those rules :
+	
+	* "F = Fast" : Test shoul be fast so that we can run it frequently.
+	* "I = Independent" : Test should not depend on each other (else they will be cascade of failing when one fail).
+	* "R = Repeatable" : Test may be reapeatable in any env (Local, Production, Q.A).
+	* "S = Self-Validating" : Test should have a boolean output (passed or failed).
+	* "T = Timely" : Test should be written just "before the production code"
+					 those production codes are supposed to make the test pass.
+
+9- "Conclusion"
+	Tests may be more important than production code because :
+		tests preserve and enhance the flexibility, maintainability, and reusability of the production code.
+	So keep your tests clean & succinct.
+	*** Invent testing APIs that act as domain-specific language that helps you write the tests
+	
+

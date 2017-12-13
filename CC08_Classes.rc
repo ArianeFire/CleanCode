@@ -1,0 +1,380 @@
+Clean Code Serie : Classes
+
+0- "INTRO" 
+	The last chapters are all about clean code in low level details,
+	Now we are going to see the Organization in the high level.
+	
+1- "Class Organization"
+	Class variables should be declared in the following order for Java Standards :
+		1. "public static final" variables (seldom reason to have them)
+		2. "private static final" variables 
+		3. "private" instance variables.
+		4. Utilities functions used by a function should be below taht function.
+		
+	Respect Encapsulation.
+	
+2- "Classes should be small"
+	=> Smaller is the first rules that come to mind when designing classes (But how small ?).
+	
+	=> For functions the size was measured with the number of line,
+		*** For classes, we talk about "responsibilities"
+		*** It's the number of methods containined in a class, but the number of responsibilities it handles.
+		
+		*** "The name of the class should describe it responsibility"
+			The more confusing the class name is, the more it has responsibility.
+			Example of confusing names : "Processor, Manager, Super"
+		*** The class name should be descriptive with less than 25 chars without (If, Or, And & But)
+		
+			
+	1. "SRP" (Single Responsability Principle)
+		=> It says that "A class should have one & only one reason to change".
+			So classes should have "one responsibility & one reason to change"
+			
+		=> Example : This class is doing more than one thing :
+			public class SuperDashboard extends JFrame implements MetaDataUser
+				public Component getLastFocusedComponent()
+				public void setLastFocused(Component lastFocused)
+				public int getMajorVersionNumber()
+				public int getMinorVersionNumber()
+				public int getBuildNumber()
+			}
+			
+			1. The class deal with components (getLastFocusedComponent())
+			2. It also handles the version
+			3. Event more it is a subclass of "JFrame"
+			
+			=> This class is clearly doing more than one thing.
+			
+			* the first thing we can do here is to extract the Version logic method in a class :
+			
+			public class Version {
+				public int getMajorVersionNumber()
+				public int getMinorVersionNumber()
+				public int getBuildNumber()
+			}
+			
+			So the key here is to ask yourself what is the responsibility of that class ?
+				=> The response to that question may lead you to better design & better abstraction.
+				
+		=> Getting software to work and making software clean are two very different activities.
+			=> Most of us focus on getting the software to work.
+			=> We fail to switch to the other concern & move to other stuff rather than making the code clean.
+				**** When you're done with making the code work, take the time to make your code clean & well organized.
+				
+		=> Every system will have some complexity, the key thing to hide those complexities is to organise it,
+			By dividing it to a set of small classes (with single responsability & one reason to change) which operate to get the job done.
+			
+	2. "Cohesion"
+		Classes should have few instance variables & Each variable of the should manipulate those variables.
+		A class in which every method manipulate every single variable is maximally cohesive (not possible).
+		=> So the goal is to keep our class high cohesive (This mean instance variables & methods should be co-dependent).
+			> In a class, when subset of variables are used only by a subset of method => those should be in there own class.
+				(It is one way to make your classes more cohesive).
+		
+		* Example of High cohesive class is this Stack implementation :
+			public class Stack {
+				private int topOfStack = 0;
+				List<Integer> elements = new LinkedList<Integer>();
+				
+				public int size() {
+					return topOfStack;
+				}
+				
+				public void push(int element) {
+					topOfStack++;
+					elements.add(element);
+				}
+				
+				public int pop() throws PoppedWhenEmpty {
+					if (topOfStack == 0)
+						throw new PoppedWhenEmpty();
+					int element = elements.get(--topOfStack);
+					elements.remove(topOfStack);
+					return element;
+				}
+			}
+		NB : Notice how every single variable is used by every methods (excepted size() method).
+		
+	** In some situations, in the purpose of making function small & dimunish the number function params,
+		lead to a proliferation of instance variables used only by a subset of methods in that class,
+		=> A new class should be created (or is trying to get off the that class).
+		
+	3. "Maintaining cohesion could result to many small classes"
+		The act of breaking large functions into smaller functions causes a proliferation of classes.
+		Indeed to break large function, we proceed as following :
+			1. Extract part of the large function using only certain variables in their own class,
+				Those variables will become the extracted class's instance variables.
+			2. Then in that new class we break the extracted method into small pieces
+			
+		=> This could lead to classes with instance variables share only by few functions,
+			=> Fortunately, those variables & methods in the new class sharing the same instance variable
+				should be extracted into their own new class.
+		
+		NB : The thing to understand here is : "when classes loose cohesion, split them".
+		
+		Example of breaking large function to smaller one :
+			public class PrintPrimes {
+				public static void main(String[] args) {
+					final int M = 1000, RR = 50, CC = 4, WW = 10, ORDMAX = 30;
+					int P[] = new int[M + 1], MULT[] = new int[ORDMAX + 1];
+					int PAGENUMBER, PAGEOFFSET, ROWOFFSET, C, J, K, ORD, SQUARE, N;
+					boolean JPRIME;
+		
+					J = 1;
+					K = 1;
+					P[1] = 2;
+					ORD = 2;
+					SQUARE = 9;
+					
+					while (K < M) {
+						do {
+							J = J + 2;
+							if (J == SQUARE) {
+								ORD = ORD + 1;
+								SQUARE = P[ORD] * P[ORD];
+								MULT[ORD - 1] = J;
+							}
+							
+							N = 2;
+							JPRIME = true;
+							
+							while (N < ORD && JPRIME) {
+								while (MULT[N] < J)
+									MULT[N] = MULT[N] + P[N] + P[N];
+								
+								if (MULT[N] == J)
+									JPRIME = false;
+									
+								N = N + 1;
+							}
+						} while (!JPRIME);
+						
+						K = K + 1;
+						P[K] = J;
+					}
+					
+					{
+						PAGENUMBER = 1;
+						PAGEOFFSET = 1;
+						while (PAGEOFFSET <= M) {
+							System.out.println("The First " + M +
+							" Prime Numbers --- Page " + PAGENUMBER);
+							System.out.println("");
+							
+							for (ROWOFFSET = PAGEOFFSET; ROWOFFSET < PAGEOFFSET + RR; ROWOFFSET++){
+								for (C = 0; C < CC;C++)
+									if (ROWOFFSET + C * RR <= M)
+										System.out.format("%10d", P[ROWOFFSET + C * RR]);
+								System.out.println("");
+							}
+					
+							System.out.println("\f");
+							PAGENUMBER = PAGENUMBER + 1;
+							PAGEOFFSET = PAGEOFFSET + RR * CC;
+						}
+					}
+				}
+			}
+			
+			=> Refactored :
+			
+			public class PrimePrinter {
+				public static void main(String[] args) {
+					final int NUMBER_OF_PRIMES = 1000;
+					
+					int[] primes = PrimeGenerator.generate(NUMBER_OF_PRIMES);
+					
+					final int ROWS_PER_PAGE = 50;
+					final int COLUMNS_PER_PAGE = 4;
+					
+					RowColumnPagePrinter tablePrinter = new RowColumnPagePrinter(ROWS_PER_PAGE,
+																				COLUMNS_PER_PAGE,
+								"The First " + NUMBER_OF_PRIMES + " Prime Numbers");
+					tablePrinter.print(primes);
+				}
+			}
+			
+			public class RowColumnPagePrinter {
+				private int rowsPerPage;
+				private int columnsPerPage;
+				private int numbersPerPage;
+				private String pageHeader;
+				private PrintStream printStream;
+				
+				public RowColumnPagePrinter(int rowsPerPage, int columnsPerPage, String pageHeader) {}
+				public void print(int data[]) {}
+				private void printPage(int firstIndexOnPage, int lastIndexOnPage, int[] data) {}
+				private void printRow(int firstIndexInRow, int lastIndexOnPage, int[] data) {}
+				private void printPageHeader(String pageHeader, int pageNumber) {}
+				public void setOutput(PrintStream printStream) {}
+			}
+			
+			public class PrimeGenerator {
+				private static int[] primes;
+				private static ArrayList<Integer> multiplesOfPrimeFactors;
+				
+				protected static int[] generate(int n) {}
+				private static void set2AsFirstPrime() {}
+				private static void checkOddNumbersForSubsequentPrimes() {}
+				private static boolean isPrime(int candidate) {}
+				private static boolean isLeastRelevantMultipleOfNextLargerPrimeFactor(int candidate) {}
+				private static boolean isNotMultipleOfAnyPreviousPrimeFactor(int candidate) {}
+				private static boolean isMultipleOfNthPrimeFactor(int candidate, int n) {}
+				private static int smallestOddNthMultipleNotLessThanCandidate(int candidate, int n) {}
+			}
+			
+		NB : When Refactoring in general, we will get more line of code, here the reasons are the followings :
+			1. we use longer & more descriptive variable names.
+			2. we use function and class declarations as a way to add commentary to the code.
+			3. we use whitespace and formatting techniques to keep the program readable.
+			
+			* The program is divided now into 3 Three responsabilities :
+				1. "PrimePrinter" : handles the execution environnement.
+				2. "RowColumnPagePrinter" : knows how to format list of numbers into pages with certain number of rows & columns.
+				3. "PrimeGenerator" : knows how to generate list of primes numbers.
+				
+	4. "Organizing for change"
+		Example of class not organized for change :
+			public class Sql {
+				public Sql(String table, Column[] columns)
+				public String create()
+				public String insert(Object[] fields)
+				public String selectAll()
+				public String findByKey(String keyColumn, String keyValue)
+				public String select(Column column, String pattern)
+				public String select(Criteria criteria)
+				public String preparedInsert()
+				private String columnList(Column[] columns)
+				private String valuesList(Object[] fields, final Column[] columns)
+				private String selectWithCriteria(String criteria)
+				private String placeholderList(Column[] columns)
+			}
+			
+			NB : This class will change when :
+				1. we add new type of statement (for example "update()")
+				2. It will change when we update the implementation details of a method (Ex. : update "select()" to support "subselect")
+				
+				Clearly this class doesn't respect the SRP principle cause of those 2 purpose of change.
+				
+				* "A hint" here for better organization is the private methods that apply to only one public methods
+					Ex. :  selectWithCriteria() seems to apply only to select() method
+					"This may be a great heuristic for way to better organization."
+					
+				So a better Organization may be following :
+				abstract public class Sql {
+					public Sql(String table, Column[] columns)
+					abstract public String generate();
+				}
+				
+				public class CreateSql extends Sql {
+					public CreateSql(String table, Column[] columns)
+					@Override public String generate()
+				}
+				
+				public class SelectSql extends Sql {
+					public SelectSql(String table, Column[] columns)
+					@Override public String generate()
+				}
+				
+				public class InsertSql extends Sql {
+					public InsertSql(String table, Column[] columns, Object[] fields)
+					@Override public String generate()
+					private String valuesList(Object[] fields, final Column[] columns)
+				}
+				
+				public class SelectWithCriteriaSql extends Sql {
+					public SelectWithCriteriaSql(
+					String table, Column[] columns, Criteria criteria)
+					@Override public String generate()
+				}
+				
+				public class SelectWithMatchSql extends Sql {
+					public SelectWithMatchSql(
+					String table, Column[] columns, Column column, String pattern)
+					@Override public String generate()
+				}
+				
+				public class FindByKeySql extends Sql
+					public FindByKeySql(
+					String table, Column[] columns, String keyColumn, String keyValue)
+					@Override public String generate()
+				}
+				
+				public class PreparedInsertSql extends Sql {
+					public PreparedInsertSql(String table, Column[] columns)
+					@Override public String generate() {
+					private String placeholderList(Column[] columns)
+				}
+				
+				public class Where {
+					public Where(String criteria)
+					public String generate()
+				}
+				
+				public class ColumnList {
+					public ColumnList(Column[] columns)
+					public String generate()
+				}
+					
+			NB : None we can notice the followings :
+				1. The risk that one function change breaks another disappear. (Every one has it responsability)
+				2. Adding new statement doesn't require any of the existing class to change => add new subclass of Sql "UpdateSql".
+				
+				=> Not Only SRP is OK here, we also respect another class design principle => OCP
+					Our Sql class is open to new functionnality with subclassing while keeping other classes closed.
+					
+			* "In an ideal system, we incorporate new features by extending the system, not by making modifications to existing code."
+			
+	5. "Isolating from change"
+		OO design tell us that there are "concrete class" containing implementation details
+			& "Abstract class" concept only.
+		Client class depending on concret class will change when need change.
+			=> The solution to that problem is to introduce Interface & Abstract classes to helps avoid impact of those details.
+			
+		Dependencies upon concrete class create challenge for testing :
+			Example :
+				Imagine we're creating a test for a "Portfolio" class depending on "TokyoStockExchange"
+				=> It is difficult to test the Portfolio class cause the "TokyoStockExchange" change every minute
+				
+				* So consider "StockExchange" interface :
+					public interface StockExchange {
+						Money currentPrice(String symbol);
+					}
+				
+				* And now our Portfolio class will depend on that interface (which can have a "TokyoStockExchange" implementation)
+					
+					public Portfolio {
+						private StockExchange exchange;
+						
+						public Portfolio(StockExchange exchange) {
+							this.exchange = exchange;
+						}
+					}
+				* Now for our test we can create a fixed Implementation for that "StockExchange" interface, which will make the test more easier.
+				
+					public class PortfolioTest {
+						private FixedStockExchangeStub exchange;
+						private Portfolio portfolio;
+						
+						@Before
+						protected void setUp() throws Exception {
+							exchange = new FixedStockExchangeStub();
+							exchange.fix("MSFT", 100);
+							portfolio = new Portfolio(exchange);
+						}
+						
+						@Test
+						public void GivenFiveMSFTTotalShouldBe500() throws Exception {
+							portfolio.add(5, "MSFT");
+							Assert.assertEquals(500, portfolio.value());
+						}
+					}
+					
+			** By minizing coupling like so, our Portfolio adhere to another Design principle "DIP" Dependency Injection Principle.
+			
+				DIP = A class should depend upon Abstraction not in Concretion details.
+				
+			Of course, now our Portfolio class depends on Abstract StockExchange interface, 
+				not on concrete TokyoStockExchange.
+				
+			

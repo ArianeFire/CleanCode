@@ -1,0 +1,30 @@
+Head First Design Pattern : "Program to interface mean program to super-type"
+	
+	* When we talk about program to interface, people generally think of Java "interface"
+		Or there is also the "concept of interface" which may actually be Java "interface" or "abstract class"
+		
+		=> Or "interface" & "abstract class" are considered as "super-type"
+		=> So Programming to an interface => "Programming to super-type"
+		
+	Example : let take an abstract Animal class with two implementations "Dog" & "Cat"
+		
+		1. Programming to an implementation is :
+			Dog dog = new Dog();
+			dog.bark();
+			
+			Here the variable "dog" as Type "Dog" is a concrete implementation of Animal.
+			
+		2. Programming to an "interface/super-type" is :
+			Animal dog = new Dog();
+			dog.makeSound();
+			
+			interface Animal {
+				void makeSound();
+			}
+			
+			class Dog extends Animal {
+				@override void makeSound() { bark(); }
+				void bark() {...}
+			}
+			class Cat extends Animal {...}
+		

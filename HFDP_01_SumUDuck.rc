@@ -1,0 +1,116 @@
+Head First Design Pattern : SumUDuck
+	
+	* Initial Need : 
+		SumU => Company need multiple kind of Duck that can "swim", "quack"
+
+	* The Implementation : 
+		
+		// Abstract Duck
+		class abstract Duck {
+		
+			void swim(){}
+			void quack(){}
+			abstract void display();
+		}
+		
+		// Concrete Duck 1
+		class MallarDuck extends Duck {
+			
+			@override void display(){}
+		}
+		
+		// Concrete Duck 2
+		class ReadHeadDuck extends Duck {
+		
+			@override void display(){}
+		}
+		
+	* New Need => new type of Duck that can "Fly" & other some Duck that can not "quack()"
+	
+		1. First solution that come in mind => add "fly()" method to "abstract Duck"
+			abstract class Duck {
+				...
+				
+				void fly(){}
+			}
+			
+			- This will allow all the Duck to Fly => Or all duck can't fly based on the requirement.
+			
+				- A solution to that may be to override "fly" method in Duck that can't fly 
+				(Will obscure the Duck's behavior).
+				
+		2. *** A better solution to this may be the use of an "interface"
+			- The Common Duck's behavior will be in "abstract Duck" (here "swim()")
+			- Each particular behavior will be in a separate interface (FlyableDuck, QuackableDuck)
+
+			abstract class Duck {
+				void swim(){}
+				abstract void display();
+			}
+			
+			interface FlyableDuck {
+				void fly();
+			}
+			
+			interface QuackableDuck {
+				void quack();
+			}
+			
+		NB : There is problem with that implementation :
+			1. Imagine that we have 48 implementation of Duck with 28 FlyableDuck
+			2. When we change the FlyableDuck to have new behaviour or change there implementation
+				=> We have to look through all FlyableDuck & make the change
+				=> This could be really thug.
+				
+		** The source of this problem come from the fact that we mixed "what change" with "what doesn't" 
+			So the solution to this may be to "isolate the moving part" (What change) from the constant part of the systems.
+			Here the moving parts are "QuackableDuck & FlyableDuck", they have to be isolated from the rest of the Duck class.
+				
+		The solution to that problem is the "programming to an interface" (See : HFDP_02_...)
+			
+			* By adopting that, we will have the following :
+			
+				1. FlyableDuck & QuackableDuck will become "FlyBehavior & QuackableBehavior".
+				2. They will no longer be implementated by "Duck class" else they be "used" by it.
+				3. Those behaviour will be implementated by every new FlyBehavior or QuackableBehavior.
+					
+					Ex. : 
+						
+						class FlyWithWings implements FlyBehavior {} // Duck that have wings to Fly's implementation
+						class FlyNoWay implements FlyBehavior {} 	 // Duck can't Fly's implementation
+						
+						Same thing for QuackableBehavior (Quack, Squeak, MuteQuack)
+						
+				NB : Notice how those behaviours will be reuseable by other classes.
+						
+	
+		3. Now that we seperate concerns, we have to integrate the Duck's Behavior,
+			=> Duck will "delegate" it behaviours in the following way :
+			1. add new Attributes to the Duck class "quackBehaviour & flyBehavior" (interface types)  
+				In the way every Duck will instanciate those behaviour based on their behavior.
+			2. replace "quack()" & "fly()" methods the Duck by "performQuack() & performFly()".
+			
+			abstract class Duck {
+				protected QuackBehavior quackBehaviour;
+				protected FlyBehavior flyBehavior;
+				
+				void performQuack(){ quackBehaviour.quack(); }
+				void performFly(){ flyBehavior.fly(); }
+				void swim();
+				void display();
+			}
+			
+			3. Set quackBehaviour & flyBehavior for each Ducks
+				
+				* MallarDuck => quack & Fly 
+				
+				class MallarDuck extends Duck {
+					
+					public MallarDuck(){
+						quackBehavior = new Quack();
+						flyBehavior = new FlyWithWings();
+					}
+				}
+				
+				* 
+	

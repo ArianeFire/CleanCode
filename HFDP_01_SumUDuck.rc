@@ -111,6 +111,18 @@ Head First Design Pattern : SumUDuck
 						flyBehavior = new FlyWithWings();
 					}
 				}
+
+			NB : Duck implementation for the moment can't change Behavior at runtime cause their behavior fixed in the constructor.
+			
+			To Make it possible to change the implementation dynamically, 
+				*** Just add "setter for the two behaviour" in the "Duck" class.
 				
-				* 
+		
+		NB ************ The Pattern used here is "Strategy Pattern" **************************************
+		
+			DEF : Strategy Pattern 
+					- define a set of algorithm (Interfaces implementated by class, each implementation is an algorithm)
+					- encapsulate each ones (Hide the implementation only provide Interface)
+					- make them interchangeable (given the way to change implementation on runtime)
+		
 	

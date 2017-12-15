@@ -1,0 +1,20 @@
+Head First Design Pattern : "Toolbox for OO Design"
+
+	* "Basic OO"
+		=> Abstraction 
+		=> Encapsulation
+		=> Inheritance
+		=> Polymorphism
+		
+		* Those basics doesn't make you good OO designer.
+		
+	* "OO Principles"
+		=> Encapsulate what varies.
+		=> Favor Composition rather than inheritance.
+		=> Program to interfaces, not on implentation.
+		
+	* "OO Patterns"
+		- Strategy :
+			** Define a set of algorithm,
+			** Encapsulate them,
+			** Make them interchangeable at runtime.

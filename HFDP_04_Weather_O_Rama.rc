@@ -1,0 +1,120 @@
+Head First Design Pattern : Weather-O-Rama
+
+Need : Weather-O-Rama is a company that need to display "weather information" to different screens
+		Those information are from a "WeatherData Object" which knows how to retrieve "weather informations"
+		Information are displayed in 3 screens (Condition => "temperature, pressure, ..", Weather Statistics, Forecast).
+		
+		Here is what we got :
+		
+		class WeatherData {
+			
+			getTemperature();
+			getHumidity();
+			getPressure();
+			
+			measurementChanges();
+		}
+		
+		NB :
+			1. We don't care about how "getTemperature(); getHumidity(); getPressure();" get their informations
+			2. What we know is that every time information get updated, "measurementChanges()" get called.
+			3. so the job is to implements the "measurementChanges()" so that it update the 3 displays 
+				for current Condition, Statistics & Forecast (Those are updated every time new displays are available).
+				
+				Another thing to mention is that an API will be available for other developer to create display screens,
+				They can add & remove much displays as they want. (So it implementation may be expandable).
+				
+		Here is a first solution that may not be the right one :
+		
+		class WeatherData {
+			// Getters of weather data
+			
+			public void measurementChanges(){
+				
+				float temperature = getTemperature();
+				float humidity = getHumidity();
+				float pressure = getPressure();
+				
+				currentCondditionDisplay.update(temperature, humidity, pressure);
+				currentStatisticDisplay.update(temperature, humidity, pressure);
+				currentForcastDisplay.update(temperature, humidity, pressure);
+			}	
+		}
+		
+		* Problems with that implementation : 
+			1. We are coding to concrete implementations, not interfaces. (break second OO Design Principle, no way of altering the behavior at runtime)
+			2. Every new display type will lead to code modification (Break OCP principle)
+			3. No way to add or remove new display type at runtime (Not expandable)
+			4. We haven't encapsulate what change => "Weather display change but not encapsulate here" (break first OO Design Principle)
+			
+			The One & only thing right here is that we seem to use a common interface update(...).
+			
+			
+		* To deal with that chapter, take a look at the Observer Pattern in HFDP_05.
+		
+		* Solution using the Observer Pattern : 
+		
+			interface Subject {
+				void registerObserver(Observer observer);
+				void removeObserver(Observer observer);
+				void notifyObservers();
+			}
+			
+			interface Observer {
+				void update(float temperature, float humidity, float pressure);
+			}
+			
+			interface DisplayDevice {
+				void display();
+			}
+			
+			class WeatherData implements Subject {
+				// Attribute & Getters
+				List<Observer> observers = new ArrayList<>();
+				
+				public measurementChanges(){
+					notifyObservers();
+				}
+				
+				public void registerObserver(Observer observer){
+					observers.add(observer);
+				}
+				
+				public void removeObserver(Observer observer){
+					observers.remove(observer);
+				}
+				
+				public void notifyObservers(){
+					observers.forEach(observer -> 
+						observer.update(getTemperature(), getHumidity(), getPressure()));
+				}
+			}
+			
+			class ConditionDisplayDevice implements Observer, DisplayDevice {
+				
+				private Subject weatherData;
+				
+				public ConditionDisplayDevice(Subject weatherData){
+					this.weatherData = weatherData;
+					this.weatherData.registerObserver(this);
+				}
+				
+				public void update(...){ ... }
+				public void display(){ ... }
+			}
+			
+			class ForecastDisplayDevice implements Observer, DisplayDevice {....}
+			class StatisticsDisplayDevice implements Observer, DisplayDevice { .... }
+			
+			// Main :
+			WeatherData weatherData = new WeatherData();
+			ConditionDisplayDevice conditionDisplay = new ConditionDisplayDevice(weatherData);
+			
+		
+		* This implementation lead us to the following question : "does the call to display() should be done inside update(...) ?"
+			=> RE. : In this simple case no problem, but in a more complexe system, we may use the MVC pattern to separate those logics.
+			
+		
+				
+		
+		

@@ -1,0 +1,80 @@
+Head First Design Pattern : Observer Pattern
+
+	Intro : Let's consider the following situation
+		1. A Newpaper publisher publish newpapers.
+		2. You as Observer subscribe to a particular publisher, 
+			you will receive newpaper every time there is a new edition 
+			as long as you remain subscribed to this particular publisher.
+		3. You unsubscribe whenever you don't want a paper & they stop deliver to you.
+		4. While the pusblisher keep editing people, airline & others constantly subcribe & unsubscribe.
+		
+		PUBLISHERS + SUBSCRIBERS = OBSERVER PATTERN.
+		(But PUBLISHERS => Subject & SUBSCRIBERS => Observer)
+		
+			* When data change in the Subject, Observer get notified.
+			
+		
+	Define :
+		Observer Pattern define a one-to-many relationship between a set of Object,
+		So that when the of one Object change all it depends get notified & updated automatically.
+		
+		"Subject & Observers" define a "one to many relationship" so that when the "state of the Subject" change,
+		"all the Observers" get notified & be updated depending on notification type.
+		
+	Observer Classes :
+	
+		interface Subject {
+			void registerObserve(...);
+			void unregisterObserver(...);
+			void notifyObservers();
+		}
+		
+		interface Observer {
+			update();
+		}
+		
+		class CSubject implements Subject { }  //ConcreteSubject May have get/setState method to manage it state (subscribed or unsubscribe).
+		class CObserver implements Observer {}
+		
+	Observer & Loose Coupling :
+		When two objects are loosely coupled, they can interact, but have little knowledge of each over.
+		* Observer Pattern give an OO design where Observers & Subject are loosely coupled.
+			1. The Only thing the Subject knows about Observer is that they implement a certain interface (Observer interface).
+			2. We can add/remove a new Observer at anytime.
+				The only thing Subject depends on is a list of Observer interface.
+				This give us the ability to manipulate (+/-) Obverser at anytime.
+			3. We don't need to modify the Subject to add new type of Observer.
+				The new Observer only implements the Observer interface & subscribe to the Subject.
+			4. We can reuse Subject & Observer classes independently cause they are tightly coupled.
+			5. Changes to either Subject or Observer will not affect the other (cause they are tightly coupled).
+			
+			NB : This lead us to the following design principle :
+					"Strive for loosely coupled design between objects that interact".
+				
+					=> Loosely coupled design allow us to build flexible OO systems that can change
+						Because they minimize the interdependency between objects.
+						
+	Java Utils Observer Pattern implementation :
+		java.util provide a class "Observable" & an interface "Observer" that allow us to implement the Observer Pattern.
+		An interesting thing about that is the fact of having lot of thing already done for us :
+			1. add/remove Observer to Observable
+			2. Notifcation already handled
+			3. Push/Pull mechanism available
+			
+		Having say that, it turn out that, java Observable has a bit of problem :
+			1. Observable is a class, no interface behind it => we are forced to subclass it,
+				So this break the reusability cause we can add java Observable beahvior to a class already subclassing another class.
+			2. Cause Observable is not an interface, we can't even create our own implementation to deal with java Observer API.
+				There's no possible way of swapping the implementation of that observer inside the Observers at runtime.
+				So java built in Observer Pattern may not be a good idea.
+			3. Observable has a protected method "setChanged()" => you can't call that method on an Observable instance,
+				you have to subclass it 
+					=> We can't even create our own Observable and compose it with our own objects;
+						=> Again break a design principle "Favour composition over inheritance".
+			
+	Another place to find Observer Pattern implementation in java is Swing Components	
+		Take a JButton for example :
+			it has a method called addActionListener (those listenner are nothing mre than "observers" where the subject is action which will be performed)
+			
+		
+		

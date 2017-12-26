@@ -76,5 +76,25 @@ Head First Design Pattern : Observer Pattern
 		Take a JButton for example :
 			it has a method called addActionListener (those listenner are nothing mre than "observers" where the subject is action which will be performed)
 			
+			
+	Observer Pattern & Design Principle :
+		* "Identity & encapsulate what vary on your application"
+			In the Observer Pattern, the 2 things that are changing is the state of the "Subject" & types of "Observers"
+			The pattern allow you to change the objects that are depend on the Subject's state, without having to change the subject itself
+			=> So we have encapsulated what vary so that it can vary independently of the other Objects.
+		
+		* "Program to an interface, not an implementation"
+			The Subject & Observer are both using interfaces,
+			Subject keep track of the object implementing the Observer interface,
+			While the Observer register & get notification from object implementing the Observer interface.
+			=> Notice how this made things loosely coupled.
+			
+		* "Favour composition over inheritance"
+			The Observer Pattern use the composition to compose Observers for a Subject.
+			Notice that this relationship is not built using any kind of inheritance hierrarchy.
+			=> This is done on runtime.
+		
+		
+			
 		
 		

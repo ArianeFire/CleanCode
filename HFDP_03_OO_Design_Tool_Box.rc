@@ -10,9 +10,10 @@ Head First Design Pattern : "Toolbox for OO Design"
 		
 	* "OO Principles"
 		=> Encapsulate what varies.
-		=> Favor Composition rather than inheritance.
+		=> Favor "Composition" rather than "Inheritance".
 		=> Program to interfaces, not on implentation.
 		=> Strive for loosely coupled design between objects that interact.
+		=> Open Close Principle (OCP) : Class should be open for "extension", but closed for "modification"
 		
 	* "OO Patterns"
 		- Strategy :
@@ -24,3 +25,22 @@ Head First Design Pattern : "Toolbox for OO Design"
 			** Define a one-to-many dependency between objects,
 			** So that when one Object changes state
 			** All it depends are notifiy and updated automatically.
+		
+		
+		-----> Favor "Composition" rather that "Inheritance"
+			* When you make reuse wiht inheritence, all the behavior will be set statically at runtime,
+			* All those subclasses will inherit the same behavior
+			* In the other hand, having reuse through "Composition" will allow you to "set the reuse behaviour at runtime", so dynamically
+			* You can even alter the behaviour when using "Composition" in the opposite of the inheritence.
+			* This way, you will be able to add multiple behavior to object at runtime, even the kind of behaviour imagine by the design at the beginning. 
+			
+			** The effect of this rule on code maintainance : using this technique will allow you to :
+				* Add new functionnality at runtime to an abject.
+				* Write new code to add new behaviour instead of altering the existing code.
+				* "Avoid changing code" will reduce the chance to put "bug or side effect" in existing code.
+		
+		-----> OCP : "Open Close Principle"
+			* This mean that our classes are open for extension, so feel free to extends them with new behaviors as your requirements changes, cause they will.
+			* But don't alter the existing code, cause we have spend a lot time making this code work, so altering it may increase the chance to put bug in it and even side effects.
+			* Respecting this principle will lead to Designs that are resilient to changes a easy to add new functionalities to meet changing requirements.
+			

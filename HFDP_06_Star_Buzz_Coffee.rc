@@ -1,0 +1,96 @@
+Head First Design Pattern : StarBuzz Coffee
+
+	StarBuzz is one of those fast growing company that sell beverage.
+	Here is the first design that they have made when they get into business for the Beverage :
+	
+	abstract class Beverage {	
+		protected String description;
+		
+		public String getDescription(){ return description; }
+		public abstract double cost();
+	}	
+	
+	Every subcclass of Beverage should define "cost()" to return the cost of the Beverage
+	And also the description field should be informed by each subclass.
+	
+	class HouseBlend extends Beverage {
+		@Override
+		public double cost(){ ..}
+	}
+	
+	class DarkRoast extends Beverage {
+		@Override
+		public double cost(){ ..}
+	}
+	
+	class Decaf extends Beverage {
+		@Override
+		public double cost(){ ..}
+	}
+	
+	class Expresso extends Beverage {
+		@Override
+		public double cost(){ ..}
+	}
+	
+	In addtion of your coffee, you can have condiments too, like : steamed milk, chocolate, soy, all topped with whipped milk
+	
+	With the current approach, StarBuzz created lot implementation of Bevearage by mixing Coffee with Condiments,
+	This lead us to something like : HouseBlendWithWhippedMilkAndMocha (HouseBlendWithCondimentXAndCondimentY) 
+	that will calculate the cost for the Coffee + All Condiments.
+	And all others coffee type will be mixed like that :
+		* HouseBlendWithCondimentXAndCondimentY, DarkRoastWithCondimentXAndCondimentY
+		* ExpressoWithCondimentXAndCondimentY, DecafWithCondimentXAndCondimentY
+	
+	=> Imagine the number of combine, we will have "class Explosion".
+	=> What will happen when the cost for coffee increase ?
+	=> What will happen when we add new Carramel top to coffees ?
+	=> A maintenance NightMare, What "design principle" did they break ?
+		* Fovour Composition over inheritance (Here we're clearly favouring inheritance over composition)
+		* Encapsulate what varies in your system (Here the Condiments that can be added to the coffee vary but are not encapsulated)
+		* Not possible to change condiments at runtime. (May not be needed here)
+		
+	*** Another solution that may come to mind is the following :
+		Use instance variable in Beverage class to keep track of condiments, so we will have :
+		
+		abstract class Beverage {
+			
+			protected String description;
+			protected boolean milk;
+			protected boolean soy;
+			protected boolean mocha;
+			protected boolean whip;
+			
+			// (Ge/Se)tters
+			
+			protected String getDescription(){ return description; }
+			protected double cost() { /* Will calculate the cost for all the condiments */ }
+		}
+		
+		Then the subcclasses will be something like :
+		
+		class DarkRoast extends Beverage {
+			
+			public DarkRoast(){
+				description = "Coolest DarkRoast";
+			}
+			
+			public double cost(){
+				return DARK_ROAST_COFFEE_COST + super.cost();
+			}
+		}
+		
+		In total we will have only 5 classes for all.
+		** Think a bit, what may be the potential problem that we encounter here ?
+			* When Condiments price change ? => Alter the "Beverage" class => Alter existing code (Break OCP).
+			* When new condiments is added ? => Alter the "Beverage.cost()" method => Alter Existing code (Break SRP)
+			* If we have new "Beverage" like "ice tea", which is not a Coffee, we may have to extends the "Beverage" class,
+				=> In that way "ice tea" will inherit methode like "hasMilk()", it doesn't make sense,
+				=> This will make it difficult to identify a Beverage's real behavior. (This king of problem is covered in Chapter 1 : SumUDuck)
+			* What will happen have something like double mocha or double milk ?
+				
+		
+		
+	
+	
+	

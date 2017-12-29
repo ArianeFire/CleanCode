@@ -44,3 +44,17 @@ Head First Design Pattern : "Toolbox for OO Design"
 			* But don't alter the existing code, cause we have spend a lot time making this code work, so altering it may increase the chance to put bug in it and even side effects.
 			* Respecting this principle will lead to Designs that are resilient to changes a easy to add new functionalities to meet changing requirements.
 			
+			** This lead us to a big questions 
+				1. How can a design be close to modification & open for extension ? isn't it contradictory ?
+					=> At first it may seem contradictory, when you extends by using inheritence. (it hard to extends system without modifying underline code)
+					=> But remenber the Observer Pattern where we can add as much as Observers to the Subject (=> Extending Subject) without changing the subject behavior.
+					=> Of course this mean that there are "OO designs techniques" that allow this kind of this.
+					
+				2. In general, how to make a code open for extension & close to modification ?
+					Most of the patterns & techniques give a means of extends without modification on the code.
+					
+				3. How can I make every part of my design follow the OCP ?
+					we may not apply OCP everywhere, instead we will have to concentrate on those area of the code that are most likely to change,
+					And apply the techniques, so having OCP everywhere may lead to a complex code hard to understand.
+					
+			

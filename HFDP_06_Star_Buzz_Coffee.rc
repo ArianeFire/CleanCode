@@ -88,7 +88,17 @@ Head First Design Pattern : StarBuzz Coffee
 				=> In that way "ice tea" will inherit methode like "hasMilk()", it doesn't make sense,
 				=> This will make it difficult to identify a Beverage's real behavior. (This king of problem is covered in Chapter 1 : SumUDuck)
 			* What will happen have something like double mocha or double milk ?
-				
+			
+			***** This lead us to a design principle known as : OCP (Open Close Principle => OO Design ToolBox for more descr.)
+			***** To resolve the problem with Beverage & Condiments, we will use the Decorator Pattern (See HFDP_07_Decorator_Pattern)
+				In short, what will do is : "Start with Beverage & Decorate it with the Condiments at runtime"
+					So if a customer want a DarkRoast with mocha & whip, we will proceed as following:
+						1. Create DarkRoast Object
+						2. Decorate with mocha object
+						3. Decorate with whip object
+						4. Then call cost(), and rely on delegation to calculate the condiments cost.
+					
+					
 		
 		
 	
